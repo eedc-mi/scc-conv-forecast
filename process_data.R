@@ -32,6 +32,9 @@ names(tib) <- sapply(names(tib), fixName)
 
 tib <- tib %>%
   mutate_at(vars(contains("date")), ymd) %>%
-  filter(! grepl(" test ", post_as, ignore.case = TRUE))
+  filter(! grepl(" test ", post_as, ignore.case = TRUE)) %>%
+  mutate(status_code = as.integer(str_extract(status, "\\d+")))
+
+
 
 write_csv(tib, "data.csv")

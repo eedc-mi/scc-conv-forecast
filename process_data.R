@@ -34,3 +34,4 @@ tib <- tib %>%
   mutate_at(vars(contains("date")), ymd) %>%
   filter(! grepl(" test ", post_as, ignore.case = TRUE))
 
+write_csv(tib, "data.csv")

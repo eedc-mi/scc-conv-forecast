@@ -15,6 +15,7 @@ dataPath <- file.path(
 )
 
 tib <- read_csv(file.path(dataPath, "events.csv"))
+toExclude <- read_csv(file.path(dataPath, "to_exclude.csv"))
 
 fixName <- function(string) {
   newName <- unlist(strsplit(string, "-"))[1]
@@ -33,8 +34,8 @@ names(tib) <- sapply(names(tib), fixName)
 tib <- tib %>%
   mutate_at(vars(contains("date")), ymd) %>%
   filter(! grepl(" test ", post_as, ignore.case = TRUE)) %>%
-  mutate(status_code = as.integer(str_extract(status, "\\d+")))
+  mutate(status_code = as.integer(str_extract(status, "\\d+"))) %>%
+  filter(! event_id %in% toExclude$event_id)
 
-
-
+if (file.exists("data.csv")) file.remove("data.csv")
 write_csv(tib, "data.csv")

@@ -149,7 +149,7 @@ as_of_plot <- ggplot(
     y = "Number of events")
 
 fit_model <- function(data, fitYears) {
-  toFit <- data %>%
+  to_fit <- data %>%
     filter(start_year %in% fitYears) %>%
     group_by(start_year, booked_days_to_year_start) %>%
     summarize(n = n()) %>%
@@ -157,17 +157,17 @@ fit_model <- function(data, fitYears) {
     group_by(booked_days_to_year_start) %>%
     summarize(cs = mean(cs))
   
-  fitLoess <- loess(cs ~ booked_days_to_year_start, data = toFit)
-  pred <- predict(fitLoess)
+  fit_loess <- loess(cs ~ booked_days_to_year_start, data = to_fit)
+  pred <- predict(fit_loess)
   tibble(
-    x = toFit$booked_days_to_year_start, 
+    x = to_fit$booked_days_to_year_start, 
     y = pred,
     upper_20 = pred * 1.2,
     lower_20 = pred * 0.8)
 }
 
 plot_model <- function(data, currentYears, fitTbl) {
-  toPlot <- data %>%
+  to_plot <- data %>%
     filter(start_year %in% currentYears) %>%
     group_by(start_year, booked_days_to_year_start) %>%
     summarize(n = n()) %>%
@@ -176,7 +176,7 @@ plot_model <- function(data, currentYears, fitTbl) {
   ggplot() +
     geom_vline(xintercept = 0, colour = "darkgrey") +
     geom_line(
-      data = toPlot,
+      data = to_plot,
       aes(x = booked_days_to_year_start, y = num_events, colour = as.factor(start_year))) +
     geom_line(
       data = fitTbl, 
@@ -192,7 +192,7 @@ plot_model <- function(data, currentYears, fitTbl) {
     labs(x = "Days to start of year", y = "Number of events", colour = "Event year")
 }
 
-sumDefsPerDay <- function(data, years) {
+sum_defs_per_day <- function(data, years) {
   full_join(
     data %>%
       filter(
@@ -217,26 +217,26 @@ sumDefsPerDay <- function(data, years) {
 }
 
 fit_def_model <- function(data, fitYears) {
-  toFit <- sumDefsPerDay(data, fitYears) %>%
+  to_fit <- sum_defs_per_day(data, fitYears) %>%
     group_by(def_days_to_year_start) %>%
     summarize(cs = mean(cs))
   
-  fitLoess <- loess(cs ~ def_days_to_year_start, data = toFit)
-  pred <- predict(fitLoess)
+  fit_loess <- loess(cs ~ def_days_to_year_start, data = to_fit)
+  pred <- predict(fit_loess)
   tibble(
-    x = toFit$def_days_to_year_start, 
+    x = to_fit$def_days_to_year_start, 
     y = pred,
     upper_20 = pred * 1.2,
     lower_20 = pred * 0.8)
 }
 
 plot_def_model <- function(data, currentYears, fitTbl) {
-  toPlot <- sumDefsPerDay(data, currentYears)
+  to_plot <- sum_defs_per_day(data, currentYears)
   
   ggplot() +
     geom_vline(xintercept = 0, colour = "darkgrey") +
     geom_line(
-      data = toPlot,
+      data = to_plot,
       aes(x = def_days_to_year_start, y = cs, colour = as.factor(start_year))) +
     geom_line(
       data = fitTbl, 
@@ -253,13 +253,13 @@ plot_def_model <- function(data, currentYears, fitTbl) {
 }
 
 fit <- fit_model(tib, c(2016, 2017, 2018, 2019, 2020))
-bookModelPlot <- plot_model(tib, c(2019, 2020), fit) + 
+book_model_plot <- plot_model(tib, c(2019, 2020), fit) + 
   labs(
     title = "Actual Convention Bookings vs. Expected Booking Curve",
     subtitle = "All bookings")
 
-fitDef <- fit_def_model(tib, c(2016, 2017, 2018, 2019, 2020))
-defModelPlot <- plot_def_model(tib, c(2019, 2020), fitDef) +
+fit_def <- fit_def_model(tib, c(2016, 2017, 2018, 2019, 2020))
+def_model_plot <- plot_def_model(tib, c(2019, 2020), fit_def) +
   labs(
     title = "Actual Convention Bookings vs. Expected Booking Curve",
     subtitle = "Definite bookings only"
@@ -370,11 +370,11 @@ ppt <- ppt %>%
   
   add_slide(layout = "Title and Content", master = "Office Theme") %>%
   ph_with_text(str = "", type = "title") %>%
-  ph_with_gg(value = bookModelPlot, type = "body") %>%
+  ph_with_gg(value = book_model_plot, type = "body") %>%
   
   add_slide(layout = "Title and Content", master = "Office Theme") %>%
   ph_with_text(str = "", type = "title") %>%
-  ph_with_gg(value = defModelPlot, type = "body") %>%
+  ph_with_gg(value = def_model_plot, type = "body") %>%
   
   add_slide(layout = "Title and Content", master = "Office Theme") %>%
   ph_with_text(str = "", type = "title") %>%

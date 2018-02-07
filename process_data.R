@@ -53,6 +53,7 @@ tib <- tib %>%
       ! is.na(date_cancelled) ~ date_cancelled,
       TRUE ~ as.Date(NA)),
     booked_quarter = quarter(date_booked, with_year = TRUE),
+    cancelled_quarter = quarter(date_cancelled, with_year = TRUE),
     def_quarter = quarter(adj_date_definite, with_year = TRUE),
     booked_days_to_year_start = as.integer(
       date_booked - ymd(paste(start_year, "12", "31", sep = "-"))),

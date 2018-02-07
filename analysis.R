@@ -16,9 +16,13 @@ was_def_on_date <- function(x, date) {
   (! x$is_open)
 }
 
-future_plot <- ggplot(tib, aes(x = as.factor(start_year), fill = is_definite)) + 
+tib_statusbreakdown <- tib[which(tib$status_code == 30 | tib$status_code == 80 |
+                                   tib$status_code == 82 | tib$status_code == 28 |
+                                   tib$status_code ==29),]
+
+future_plot <- ggplot(tib_statusbreakdown, aes(x = as.factor(start_year), fill = status)) + 
   geom_bar() +
-  scale_fill_discrete(labels = c("Not Definite", "Definite")) +
+#  scale_fill_discrete(labels = c("Not Definite", "Definite")) +
   theme_minimal() +
   labs(
     title = "Future Convention Bookings, as of Jan. 31 2018",
@@ -26,7 +30,7 @@ future_plot <- ggplot(tib, aes(x = as.factor(start_year), fill = is_definite)) +
     x = "Start year",
     y = "Number of events")
 
-tib_as_of_16 <- tib %>% 
+tib_as_of_16 <- tib_statusbreakdown %>% 
   filter(
     date_booked <= ymd("16-01-31")) %>%
     #(adj_date_cancelled > ymd("16-01-31") | is.na(adj_date_cancelled))) %>%
@@ -34,7 +38,7 @@ tib_as_of_16 <- tib %>%
     was_definite = was_def_on_date(., ymd("16-01-31")),
     as_of = "As of Jan 31, 2016")
 
-tib_as_of_18 <- tib %>% 
+tib_as_of_18 <- tib_statusbreakdown %>% 
   filter(
     date_booked <= ymd("18-01-31")) %>%
     #(adj_date_cancelled > ymd("18-01-31") | is.na(adj_date_cancelled))) %>%
@@ -50,6 +54,80 @@ table_book_future <- tib_future %>% filter(! was_definite) %>%
   summarize(n = n()) %>%
   spread(as_of, n)
 
+# By Lead Source --------------------------------------------------------------
+
+table_book_future_CVent <- tib_future %>% filter(! was_definite, lead_source == "CVent") %>% 
+  group_by(as_of, class, lead_source) %>% 
+  summarize(n = n()) %>%
+  spread(as_of, n)
+
+table_book_future_ET <- tib_future %>% filter(! was_definite, lead_source == "Edmonton Tourism") %>% 
+  group_by(as_of, class, lead_source) %>% 
+  summarize(n = n()) %>%
+  spread(as_of, n)
+
+table_book_future_EEDC <- tib_future %>% filter(! was_definite, lead_source == "EEDC") %>% 
+  group_by(as_of, class, lead_source) %>% 
+  summarize(n = n()) %>%
+  spread(as_of, n)
+
+table_book_future_Hotels <- tib_future %>% filter(! was_definite, lead_source == "Hotels") %>% 
+  group_by(as_of, class, lead_source) %>% 
+  summarize(n = n()) %>%
+  spread(as_of, n)
+
+table_book_future_Phone-In <- tib_future %>% filter(! was_definite, lead_source == "Phone-In") %>% 
+  group_by(as_of, class, lead_source) %>% 
+  summarize(n = n()) %>%
+  spread(as_of, n)
+
+table_book_future_Repeat <- tib_future %>% filter(! was_definite, lead_source == "Repeat Business") %>% 
+  group_by(as_of, class, lead_source) %>% 
+  summarize(n = n()) %>%
+  spread(as_of, n)
+
+table_book_future_SCCtoET <- tib_future %>% filter(! was_definite, lead_source == "SCC to ET") %>% 
+  group_by(as_of, class, lead_source) %>% 
+  summarize(n = n()) %>%
+  spread(as_of, n)
+
+table_book_future_SCCWeb <- tib_future %>% filter(! was_definite, lead_source == "SCC Website") %>% 
+  group_by(as_of, class, lead_source) %>% 
+  summarize(n = n()) %>%
+  spread(as_of, n)
+
+table_book_future_Solicitation <- tib_future %>% filter(! was_definite, lead_source == "Solicitation") %>% 
+  group_by(as_of, class, lead_source) %>% 
+  summarize(n = n()) %>%
+  spread(as_of, n)
+
+table_book_future_Staff <- tib_future %>% filter(! was_definite, lead_source == "Staff Lead") %>% 
+  group_by(as_of, class, lead_source) %>% 
+  summarize(n = n()) %>%
+  spread(as_of, n)
+
+table_book_future_TOU <- tib_future %>% filter(! was_definite, lead_source == "TOU") %>% 
+  group_by(as_of, class, lead_source) %>% 
+  summarize(n = n()) %>%
+  spread(as_of, n)
+
+table_book_future_TravelAB <- tib_future %>% filter(! was_definite, lead_source == "Travel Alberta") %>% 
+  group_by(as_of, class, lead_source) %>% 
+  summarize(n = n()) %>%
+  spread(as_of, n)
+
+table_book_future_US50 <- tib_future %>% filter(! was_definite, lead_source == "US 50") %>% 
+  group_by(as_of, class, lead_source) %>% 
+  summarize(n = n()) %>%
+  spread(as_of, n)
+
+table_book_future_Website <- tib_future %>% filter(! was_definite, lead_source == "Website") %>% 
+  group_by(as_of, class, lead_source) %>% 
+  summarize(n = n()) %>%
+  spread(as_of, n)
+
+#-----------------------------------------------------------------------------------
+
 table_def_future <- tib_future %>% filter(was_definite) %>% 
   group_by(as_of, class) %>% 
   summarize(n = n()) %>%
@@ -58,10 +136,10 @@ table_def_future <- tib_future %>% filter(was_definite) %>%
 as_of_plot <- ggplot(
   bind_rows(tib_as_of_16, tib_as_of_18) %>% 
     filter(start_year >= 2016, start_year <= 2020),
-  aes(x = as.factor(start_year), fill = was_definite)) +
+  aes(x = as.factor(start_year), fill = status)) +
   geom_bar() +
   facet_wrap(~ as_of) +
-  scale_fill_discrete(labels = c("Not Definite", "Definite")) +
+#  scale_fill_discrete(labels = c("Not Definite", "Definite")) +
   theme_bw() +
   labs(
     title = "Future Convention Bookings on January 31", 
@@ -187,19 +265,27 @@ defModelPlot <- plot_def_model(tib, c(2019, 2020), fitDef) +
     subtitle = "Definite bookings only"
   )
 
+tibjoin1 <- full_join(
+  tib_statusbreakdown %>% filter(year(date_booked) > 2015, ! is.na(def_quarter)) %>%
+    count(def_quarter),
+  tib_statusbreakdown %>% filter(year(date_booked) > 2015) %>%
+    count(booked_quarter),
+  by = c("def_quarter" = "booked_quarter"))
+
+tibjoin2 <- full_join(
+  tibjoin1,
+  tib_statusbreakdown %>% filter(year(date_booked) > 2015, ! is.na(cancelled_quarter)) %>%
+    count(cancelled_quarter),
+  by = c("def_quarter" = "cancelled_quarter"))
+
 book_quarter_plot <- ggplot(
-  full_join(
-    tib %>% filter(year(date_booked) > 2015, ! is.na(def_quarter)) %>%
-      count(def_quarter),
-    tib %>% filter(year(date_booked) > 2015) %>%
-      count(booked_quarter),
-    by = c("def_quarter" = "booked_quarter")) %>%
+    tibjoin2 %>%
     replace_na(list(n.x = 0)) %>%
-    gather(key = "key", value = "value", n.x, n.y),
+    gather(key = "key", value = "value", n.x, n.y, n),
   aes(x = as.factor(def_quarter), y = value, fill = key)) +
   geom_bar(stat = "identity", position  = "dodge") +
   scale_fill_discrete(
-    labels = c("Definite", "Not Definite")) +
+    labels = c("Definite", "Booked", "Cancelled")) +
   theme_minimal() +
   labs(
     title = "New Convention Bookings and Definites by Quarter", 
@@ -225,6 +311,58 @@ ppt <- ppt %>%
   add_slide(layout = "Title and Content", master = "Office Theme") %>%
   ph_with_text(str = "", type = "title") %>%
   ph_with_table(value = table_book_future, type = "body") %>%
+  
+  add_slide(layout = "Title and Content", master = "Office Theme") %>%
+  ph_with_text(str = "", type = "title") %>%
+  ph_with_table(value = table_book_future_CVent, type = "body") %>%
+  
+  add_slide(layout = "Title and Content", master = "Office Theme") %>%
+  ph_with_text(str = "", type = "title") %>%
+  ph_with_table(value = table_book_future_ET, type = "body") %>%
+  
+  add_slide(layout = "Title and Content", master = "Office Theme") %>%
+  ph_with_text(str = "", type = "title") %>%
+  ph_with_table(value = table_book_future_EEDC, type = "body") %>%
+  
+  add_slide(layout = "Title and Content", master = "Office Theme") %>%
+  ph_with_text(str = "", type = "title") %>%
+  ph_with_table(value = table_book_future_Hotels, type = "body") %>%
+  
+  add_slide(layout = "Title and Content", master = "Office Theme") %>%
+  ph_with_text(str = "", type = "title") %>%
+  ph_with_table(value = table_book_future_Repeat, type = "body") %>%
+  
+  add_slide(layout = "Title and Content", master = "Office Theme") %>%
+  ph_with_text(str = "", type = "title") %>%
+  ph_with_table(value = table_book_future_SCCtoET, type = "body") %>%
+  
+  add_slide(layout = "Title and Content", master = "Office Theme") %>%
+  ph_with_text(str = "", type = "title") %>%
+  ph_with_table(value = table_book_future_SCCWeb, type = "body") %>%
+  
+  add_slide(layout = "Title and Content", master = "Office Theme") %>%
+  ph_with_text(str = "", type = "title") %>%
+  ph_with_table(value = table_book_future_Solicitation, type = "body") %>%
+  
+  add_slide(layout = "Title and Content", master = "Office Theme") %>%
+  ph_with_text(str = "", type = "title") %>%
+  ph_with_table(value = table_book_future_Staff, type = "body") %>%
+  
+  add_slide(layout = "Title and Content", master = "Office Theme") %>%
+  ph_with_text(str = "", type = "title") %>%
+  ph_with_table(value = table_book_future_TOU, type = "body") %>%
+  
+  add_slide(layout = "Title and Content", master = "Office Theme") %>%
+  ph_with_text(str = "", type = "title") %>%
+  ph_with_table(value = table_book_future_TravelAB, type = "body") %>%
+  
+  add_slide(layout = "Title and Content", master = "Office Theme") %>%
+  ph_with_text(str = "", type = "title") %>%
+  ph_with_table(value = table_book_future_US50, type = "body") %>%
+  
+  add_slide(layout = "Title and Content", master = "Office Theme") %>%
+  ph_with_text(str = "", type = "title") %>%
+  ph_with_table(value = table_book_future_Website, type = "body") %>%
   
   add_slide(layout = "Title and Content", master = "Office Theme") %>%
   ph_with_text(str = "", type = "title") %>%

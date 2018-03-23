@@ -16,6 +16,17 @@ was_def_on_date <- function(x, date) {
   (! x$is_open)
 }
 
+was_cancelled_on_date <- function(x, date) {
+  (x$date_booked <= date) &
+    (x$adj_date_cancelled <= date & ! is.na(x$adj_date_cancelled)) & 
+    (! x$is_open)
+}
+
+was_open_on_date <- function(x, date) {
+  (x$date_booked <= date) &
+    (x$is_open)
+}
+
 tib_statusbreakdown <- tib[which(tib$status_code == 30 | tib$status_code == 80 |
                                    tib$status_code == 82 | tib$status_code == 28 |
                                    tib$status_code ==29),]
@@ -35,16 +46,20 @@ tib_as_of_16 <- tib_statusbreakdown %>%
     date_booked <= ymd("16-01-31")) %>%
     #(adj_date_cancelled > ymd("16-01-31") | is.na(adj_date_cancelled))) %>%
   mutate(
+    as_of = "As of Jan 31, 2016",
     was_definite = was_def_on_date(., ymd("16-01-31")),
-    as_of = "As of Jan 31, 2016")
+    was_cancelled = was_cancelled_on_date(., ymd("16-01-31")),
+    was_open = was_open_on_date(., ymd("16-01-31")))
 
 tib_as_of_18 <- tib_statusbreakdown %>% 
   filter(
     date_booked <= ymd("18-01-31")) %>%
     #(adj_date_cancelled > ymd("18-01-31") | is.na(adj_date_cancelled))) %>%
-  mutate(was_definite = was_def_on_date(., ymd("18-01-31")),
-    as_of = "As of Jan. 31, 2018")
-
+  mutate(as_of = "As of Jan. 31, 2018",
+         was_definite = was_def_on_date(., ymd("18-01-31")),
+         was_cancelled = was_cancelled_on_date(., ymd("18-01-31")),
+         was_open = was_open_on_date(., ymd("18-01-31")))
+         
 tib_future <- bind_rows(
   tib_as_of_16 %>% filter(start_year %in% c(2017, 2018)), 
   tib_as_of_18 %>% filter(start_year %in% c(2019, 2020)))
@@ -54,89 +69,20 @@ table_book_future <- tib_future %>% filter(! was_definite) %>%
   summarize(n = n()) %>%
   spread(as_of, n)
 
-# By Lead Source --------------------------------------------------------------
-
-table_book_future_CVent <- tib_future %>% filter(! was_definite, lead_source == "CVent") %>% 
-  group_by(as_of, class, lead_source) %>% 
-  summarize(n = n()) %>%
-  spread(as_of, n)
-
-table_book_future_ET <- tib_future %>% filter(! was_definite, lead_source == "Edmonton Tourism") %>% 
-  group_by(as_of, class, lead_source) %>% 
-  summarize(n = n()) %>%
-  spread(as_of, n)
-
-table_book_future_EEDC <- tib_future %>% filter(! was_definite, lead_source == "EEDC") %>% 
-  group_by(as_of, class, lead_source) %>% 
-  summarize(n = n()) %>%
-  spread(as_of, n)
-
-table_book_future_Hotels <- tib_future %>% filter(! was_definite, lead_source == "Hotels") %>% 
-  group_by(as_of, class, lead_source) %>% 
-  summarize(n = n()) %>%
-  spread(as_of, n)
-
-table_book_future_Phone-In <- tib_future %>% filter(! was_definite, lead_source == "Phone-In") %>% 
-  group_by(as_of, class, lead_source) %>% 
-  summarize(n = n()) %>%
-  spread(as_of, n)
-
-table_book_future_Repeat <- tib_future %>% filter(! was_definite, lead_source == "Repeat Business") %>% 
-  group_by(as_of, class, lead_source) %>% 
-  summarize(n = n()) %>%
-  spread(as_of, n)
-
-table_book_future_SCCtoET <- tib_future %>% filter(! was_definite, lead_source == "SCC to ET") %>% 
-  group_by(as_of, class, lead_source) %>% 
-  summarize(n = n()) %>%
-  spread(as_of, n)
-
-table_book_future_SCCWeb <- tib_future %>% filter(! was_definite, lead_source == "SCC Website") %>% 
-  group_by(as_of, class, lead_source) %>% 
-  summarize(n = n()) %>%
-  spread(as_of, n)
-
-table_book_future_Solicitation <- tib_future %>% filter(! was_definite, lead_source == "Solicitation") %>% 
-  group_by(as_of, class, lead_source) %>% 
-  summarize(n = n()) %>%
-  spread(as_of, n)
-
-table_book_future_Staff <- tib_future %>% filter(! was_definite, lead_source == "Staff Lead") %>% 
-  group_by(as_of, class, lead_source) %>% 
-  summarize(n = n()) %>%
-  spread(as_of, n)
-
-table_book_future_TOU <- tib_future %>% filter(! was_definite, lead_source == "TOU") %>% 
-  group_by(as_of, class, lead_source) %>% 
-  summarize(n = n()) %>%
-  spread(as_of, n)
-
-table_book_future_TravelAB <- tib_future %>% filter(! was_definite, lead_source == "Travel Alberta") %>% 
-  group_by(as_of, class, lead_source) %>% 
-  summarize(n = n()) %>%
-  spread(as_of, n)
-
-table_book_future_US50 <- tib_future %>% filter(! was_definite, lead_source == "US 50") %>% 
-  group_by(as_of, class, lead_source) %>% 
-  summarize(n = n()) %>%
-  spread(as_of, n)
-
-table_book_future_Website <- tib_future %>% filter(! was_definite, lead_source == "Website") %>% 
-  group_by(as_of, class, lead_source) %>% 
-  summarize(n = n()) %>%
-  spread(as_of, n)
-
-#-----------------------------------------------------------------------------------
-
 table_def_future <- tib_future %>% filter(was_definite) %>% 
   group_by(as_of, class) %>% 
   summarize(n = n()) %>%
   spread(as_of, n)
 
+as_of_data <- bind_rows(tib_as_of_16, tib_as_of_18)
+as_of_data <- cbind(as_of_data,
+                    as_of_status = names(as_of_data)[max.col(as_of_data[35:37],
+                                                             "first") + 34])
+
 as_of_plot <- ggplot(
-  bind_rows(tib_as_of_16, tib_as_of_18) %>% 
+  as_of_data %>% 
     filter(start_year >= 2016, start_year <= 2020),
-  aes(x = as.factor(start_year), fill = status)) +
+  aes(x = as.factor(start_year), fill = as_of_status)) +
   geom_bar() +
   facet_wrap(~ as_of) +
 #  scale_fill_discrete(labels = c("Not Definite", "Definite")) +
@@ -311,58 +257,6 @@ ppt <- ppt %>%
   add_slide(layout = "Title and Content", master = "Office Theme") %>%
   ph_with_text(str = "", type = "title") %>%
   ph_with_table(value = table_book_future, type = "body") %>%
-  
-  add_slide(layout = "Title and Content", master = "Office Theme") %>%
-  ph_with_text(str = "", type = "title") %>%
-  ph_with_table(value = table_book_future_CVent, type = "body") %>%
-  
-  add_slide(layout = "Title and Content", master = "Office Theme") %>%
-  ph_with_text(str = "", type = "title") %>%
-  ph_with_table(value = table_book_future_ET, type = "body") %>%
-  
-  add_slide(layout = "Title and Content", master = "Office Theme") %>%
-  ph_with_text(str = "", type = "title") %>%
-  ph_with_table(value = table_book_future_EEDC, type = "body") %>%
-  
-  add_slide(layout = "Title and Content", master = "Office Theme") %>%
-  ph_with_text(str = "", type = "title") %>%
-  ph_with_table(value = table_book_future_Hotels, type = "body") %>%
-  
-  add_slide(layout = "Title and Content", master = "Office Theme") %>%
-  ph_with_text(str = "", type = "title") %>%
-  ph_with_table(value = table_book_future_Repeat, type = "body") %>%
-  
-  add_slide(layout = "Title and Content", master = "Office Theme") %>%
-  ph_with_text(str = "", type = "title") %>%
-  ph_with_table(value = table_book_future_SCCtoET, type = "body") %>%
-  
-  add_slide(layout = "Title and Content", master = "Office Theme") %>%
-  ph_with_text(str = "", type = "title") %>%
-  ph_with_table(value = table_book_future_SCCWeb, type = "body") %>%
-  
-  add_slide(layout = "Title and Content", master = "Office Theme") %>%
-  ph_with_text(str = "", type = "title") %>%
-  ph_with_table(value = table_book_future_Solicitation, type = "body") %>%
-  
-  add_slide(layout = "Title and Content", master = "Office Theme") %>%
-  ph_with_text(str = "", type = "title") %>%
-  ph_with_table(value = table_book_future_Staff, type = "body") %>%
-  
-  add_slide(layout = "Title and Content", master = "Office Theme") %>%
-  ph_with_text(str = "", type = "title") %>%
-  ph_with_table(value = table_book_future_TOU, type = "body") %>%
-  
-  add_slide(layout = "Title and Content", master = "Office Theme") %>%
-  ph_with_text(str = "", type = "title") %>%
-  ph_with_table(value = table_book_future_TravelAB, type = "body") %>%
-  
-  add_slide(layout = "Title and Content", master = "Office Theme") %>%
-  ph_with_text(str = "", type = "title") %>%
-  ph_with_table(value = table_book_future_US50, type = "body") %>%
-  
-  add_slide(layout = "Title and Content", master = "Office Theme") %>%
-  ph_with_text(str = "", type = "title") %>%
-  ph_with_table(value = table_book_future_Website, type = "body") %>%
   
   add_slide(layout = "Title and Content", master = "Office Theme") %>%
   ph_with_text(str = "", type = "title") %>%

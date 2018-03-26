@@ -55,11 +55,11 @@ tib <- tib %>%
     booked_quarter = quarter(date_booked, with_year = TRUE),
     cancelled_quarter = quarter(date_cancelled, with_year = TRUE),
     def_quarter = quarter(adj_date_definite, with_year = TRUE),
-    booked_days_to_year_start = as.integer(
+    booked_days_to_year_end = as.integer(
       date_booked - ymd(paste(start_year, "12", "31", sep = "-"))),
-    def_days_to_year_start = as.integer(
+    def_days_to_year_end = as.integer(
       adj_date_definite - ymd(paste(start_year, "12", "31", sep = "-"))),
-    canc_days_to_year_start = as.integer(
+    canc_days_to_year_end = as.integer(
       adj_date_cancelled - ymd(paste(start_year, "12", "31", sep = "-"))),
     booked_days_to_year_start = as.integer(
       date_booked - ymd(paste(start_year, "01", "01", sep = "-"))),

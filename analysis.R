@@ -24,7 +24,9 @@ was_cancelled_on_date <- function(x, date) {
 
 was_open_on_date <- function(x, date) {
   (x$date_booked <= date) &
-    (x$is_open)
+    ((!is.na(x$adj_date_cancelled) & x$adj_date_cancelled > date) |
+       (!is.na(x$adj_date_definite) & x$adj_date_definite > date) |
+       (is.na(x$adj_date_cancelled) & is.na(x$adj_date_definite)))
 }
 
 tib_statusbreakdown <- tib[which(tib$status_code == 30 | tib$status_code == 80 |
